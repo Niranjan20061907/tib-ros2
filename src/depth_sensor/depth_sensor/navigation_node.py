@@ -1,24 +1,26 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32
+from std_msgs.msg import String
+from depth_sensor.crypto_utils import decrypt_depth
 
 class NavigationNode(Node):
     def __init__(self):
         super().__init__('navigation_node')
         
-        # Subscribe to the depth sensor topic
+        # Now subscribes to String (encrypted data)
         self.subscription = self.create_subscription(
-            Float32,
+            String,
             '/rov/depth',
             self.depth_callback,
             10
         )
-        self.get_logger().info('Navigation Node started — listening for depth data!')
+        self.get_logger().info('Navigation Node started — decryption enabled 🔐')
 
     def depth_callback(self, msg):
-        depth = msg.data
+        # Decrypt the incoming message
+        depth = decrypt_depth(msg.data)
         
-        # React to depth readings — ROV decision making
+        # Same safety logic as before
         if depth < 5.0:
             action = '⚠️  TOO SHALLOW — ascending risk!'
         elif depth > 25.0:
@@ -26,7 +28,7 @@ class NavigationNode(Node):
         else:
             action = '✅ DEPTH NOMINAL — holding position'
             
-        self.get_logger().info(f'Depth received: {depth:.2f}m → {action}')
+        self.get_logger().info(f'Decrypted depth: {depth:.2f}m → {action}')
 
 def main(args=None):
     rclpy.init(args=args)

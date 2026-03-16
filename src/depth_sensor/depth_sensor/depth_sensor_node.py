@@ -1,38 +1,36 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32
+from std_msgs.msg import String
 import random
+from depth_sensor.crypto_utils import encrypt_depth
 
 class DepthSensorNode(Node):
     def __init__(self):
-        # Initialize the node with a name
         super().__init__('depth_sensor')
         
-        # Create a publisher
-        # Topic: /rov/depth
-        # Message type: Float32
-        # Queue size: 10
-        self.publisher = self.create_publisher(Float32, '/rov/depth', 10)
-        
-        # Create a timer that calls send_depth every 1 second
+        # Now publishes String instead of Float32
+        # because encrypted data is a string
+        self.publisher = self.create_publisher(String, '/rov/depth', 10)
         self.timer = self.create_timer(1.0, self.send_depth)
-        
-        self.get_logger().info('Depth Sensor Node started!')
+        self.get_logger().info('Depth Sensor Node started — encryption enabled 🔐')
 
     def send_depth(self):
-        msg = Float32()
-        # Simulate depth reading between 0 and 30 meters
-        msg.data = round(random.uniform(0.0, 30.0), 2)
+        raw_depth = round(random.uniform(0.0, 30.0), 2)
         
-        # Publish to /rov/depth topic
+        # Encrypt before publishing
+        encrypted = encrypt_depth(raw_depth)
+        
+        msg = String()
+        msg.data = encrypted
+        
         self.publisher.publish(msg)
-        self.get_logger().info(f'Publishing depth: {msg.data} meters')
+        self.get_logger().info(f'Raw: {raw_depth}m → Encrypted: {encrypted[:30]}...')
 
 def main(args=None):
-    rclpy.init(args=args)          # Start ROS 2
-    node = DepthSensorNode()       # Create our node
-    rclpy.spin(node)               # Keep it running
-    rclpy.shutdown()               # Clean up
+    rclpy.init(args=args)
+    node = DepthSensorNode()
+    rclpy.spin(node)
+    rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
