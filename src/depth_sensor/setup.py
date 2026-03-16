@@ -18,8 +18,9 @@ setup(
     description='Tiburon ROV depth sensor simulation',
     license='MIT',
     entry_points={
-        'console_scripts': [
-            'depth_sensor_node = depth_sensor.depth_sensor_node:main',
-        ],
-    },
+    'console_scripts': [
+        'depth_sensor_node = depth_sensor.depth_sensor_node:main',
+        'navigation_node = depth_sensor.navigation_node:main',
+    ],
+},
 )
